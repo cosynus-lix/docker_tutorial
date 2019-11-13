@@ -1,37 +1,38 @@
 # Docker Tutorial
 
-*DISCLAIMER*: I learned to use Docker for necessity (DARPA fun) --- I definitely miss what are the good practices.
-
 ## What is Docker and Why is it Useful?
 
-You can think of Docker as a platform to define, create, run, and coordinate virtual machines. Docker is different than a virtual machine because it virtualizes the OS-level primities instead of the machine's hardware. So, it abstraction is "lightweight" and faster than a standard virtual machine (i.e., operating system virtualization instead of hardware virtualization)
+Docker is a platform that allows to define, create, run, and coordinate containers (a virtual "operating system"?). Docker is different than a virtual machine because it virtualizes the OS-level primitives instead of the machine's hardware. So, it abstraction is "lightweight" than a standard virtual machine (i.e., operating system virtualization instead of hardware virtualization)
 
 ![Container vs. virtual machines](https://i2.wp.com/www.docker.com/blog/wp-content/uploads/Blog.-Are-containers-..VM-Image-1-1024x435.png?ssl=1)
 
 
 Why do we use Docker?
 
-- *Deploy* and *redistribute* software in a fast and repeatable way.
+- *Deploy* and *distribute* software in a fast and repeatable way.
 
-  A use case is to deploy a web service "in the cloud". Each remote machine can have a different operating system, resources, and can be virtualized in different ways... If the remote machine install Docker then we can just deploy our software with Docker in a uniform (and reliable) way.
+  A use case is to deploy a web service "in the cloud". Each remote machine can have a different operating system, resources, and can be virtualized in different ways... If the remote machine installs Docker then we can just deploy our software with Docker in a uniform (and reliable) way.
 
 - *Continuous Integration*:
 
   A common use case is when we want to run a set of tests on a system (a single software or a distributed system). We want to fix the environment (or environments) used to test our system (e.g., test it different versions of Java) and run the tests in a clean environment (for automatic continuous integration on GitHub, see [TravisCI](https://travis-ci.com)).
 
-  Another test case is to compile, run, and evaluate the student's programming exercises where every time the student upload a new program we want to compile it run some test cases. Clearly we want separation (e.g., not having a student's assignment polluting the results of another student's assignment), so every time we want to run a new, separate system that already has all the necessary dependencies installed.
+Some use cases we are more interested in:
+
+- Create replication packages for our experiments: when we publish a paper we can set up docker instead than a virtual machine (advantages: more reusable, faster to create, easier to distribute)
+
+- Try different development environments quickly, without polluting your system. For example run a program requiring a completely different version of clibc or run a program that works on linux on Mac or Windows.
+
+- Have and share the development and execution environments for our tools: for example, we could use Docker to define the machine used to develop ROS.
+
+- Another test case (similar to continuous integration) is to compile, run, and evaluate the student's programming exercises where every time the student upload a new program we want to compile it run some test cases. Clearly we want separation (e.g., not having a student's assignment polluting the results of another student's assignment), so every time we want to run a new, separate system that already has all the necessary dependencies installed.
 
 
-Use cases we are more interested in:
-
-- Create replication packages for our experiments: when we publish a paper we can set-up docker instead than a virtual machine (advantages: more reusable, faster to , easier to distribute)
-
-- Try different development environments quickly, without polluting your system: run a program requiring a specific version of libc.
-
-- Have and share the development and execution environments for our tools: for example, we could use Docker to define the machine used to develop ROShave a Docker  (not just for static analysis, but also for robotics).
+Docker also allows to define a composition and orchestration of different containers, useful to specify the deployment of distributed systems (e.g., multiple services).
 
 
-Docker also allows to define a composition of different virtual machines, for example useful to specify when developing a distributed system (e.g., multiple services - less interesting).
+**Limitations**: the container uses the guest operating system. So, in principle to run Windows you need Windows. Docker on Mac and Windows "cheats" to run Linux containers, since it uses a Linux kernel underneath (virtualized somehow). In practice some combinations do not work, like running a Windows container on MacOs.
+
 
 
 ## 0. Test your installation
@@ -48,20 +49,20 @@ $ docker run -it ubuntu bash
 
 - An `image` defines the system we run. Above, `ubuntu` is the name of an existing image.
 
-- When we execute `docker run` we create a `container`: a container instantiate an image. We can instantiate how many container we want!
+- When we execute `docker run` we create a `container`: a container instantiates an image. We can instantiate how many containers we want.
 
 - Where is the code defining the Ubuntu system,  the `ubuntu` image?
 
 
-Some magic: Docker is already configured to look for an image in a remote registry called [Docker Hub](https://hub.docker.com).
+    Some magic: Docker is already configured to look for an image in a remote registry called [Docker Hub](https://hub.docker.com).
 
-In practice:
+    In practice:
 
-- you download the images locally (more in the `docker images` command)
+    - you download the images locally (more in the `docker images` command)
 
-- you can push your images on DockerHub (so everyone can download them)
+    - you can push your images on DockerHub (so everyone can download them)
 
-- you can create your own registry (e.g., a company registry) if you need to.
+    - you can create your own registry (e.g., a company registry) if you need to.
 
 
 
@@ -70,7 +71,7 @@ In practice:
 
 We define an image printing `hello world`.
 
-a. A Dockerfile defines (declaratively) a docker an image.
+### A Dockerfile defines (declaratively) a docker image.
 
 Create a file named `Dockerfile` in a separate directory:
 
@@ -82,7 +83,7 @@ FROM ubuntu:18.04
 CMD echo "Hello Cosynus!"
 ```
 
-We create the image from the DockerFile (`docker build` command):
+We create the image from the Dockerfile (`docker build` command):
 ```bash
 $ docker build -t hellocosynus .
 ```
@@ -98,7 +99,7 @@ $ docker run -it --name hellocontainer hellocosynus
 ```
 
 
-b. Greeting with style - customizing the image
+### Greeting with style - customizing the image
 
 ```Docker
 FROM ubuntu:18.04
@@ -115,7 +116,7 @@ RUN echo "Hello Cosynus!" > hellomsg.txt
 CMD figlet -kp < hellomsg.txt
 ```
 
-c. Containers graveyard
+### Containers graveyard
 
 See what containers are running (none now):
 ```bash
@@ -258,7 +259,7 @@ $ pwd
 
 The file `cosynushasbeenhere` is there.
 
-Careful: changes to the iamge (e.g., installing software) should be done at in the `Dockerfile` and not on the container.
+Careful: changes to the image (e.g., installing software) should be done at in the `Dockerfile` and not on the container.
 
 
 c. How many containers as you want...
