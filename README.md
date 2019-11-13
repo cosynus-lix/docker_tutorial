@@ -69,11 +69,11 @@ $ docker run -it ubuntu bash
 
 ## 1. Hello World
 
-We define an image printing `hello world`.
+We define an image printing `hello world` and then we instantiate a container running that image.
 
-### A Dockerfile defines (declaratively) a docker image.
+### Creating a Dockerfile 
 
-Create a file named `Dockerfile` in a separate directory:
+A Dockerfile defines (declaratively) a docker image. Create a file named `Dockerfile` in a *separate* directory:
 
 ```Docker
 # Base the container on the ubuntu image
@@ -92,12 +92,12 @@ We can check if we have the `hellocosynus` image:
 ```bash
 $ docker image ls
 ```
+`docker image ls` list all images we have on our local computer.
 
-c. Run the container (`docker run` command):
+### Run the container (`docker run` command):
 ```bash
 $ docker run -it --name hellocontainer hellocosynus
 ```
-
 
 ### Greeting with style - customizing the image
 
@@ -111,9 +111,14 @@ RUN apt-get install -y figlet toilet
 
 RUN echo "Hello Cosynus!" > hellomsg.txt
 
-
 # Execute the command when the container runs
 CMD figlet -kp < hellomsg.txt
+```
+
+Let's rebuild the image and the container:
+```bash
+$ docker build -t hellocosynus .
+$ docker run -it --name hellocontainer hellocosynus
 ```
 
 ### Containers graveyard
@@ -133,18 +138,17 @@ Restart a container:
 $ docker container start -i hellocontainer
 ```
 
-Getting rid of all the stopped containers and **dangling images**:
+Getting rid of all the **stopped** containers and **dangling images**:
 ```bash
 docker container prune
 ```
 
-Alternatives: start a container with the `--rm` flag (i.e., `docker run -it --rm hellocosynus`), remove the precise container (e.g., `docker container rm container_id`).
-
+Alternatives: start a container with the `--rm` flag (i.e., `docker run -it --rm hellocosynus`, removes the container when its execution terminates); remove the container (e.g., `docker container rm container_id`).
 
 
 ## 2. Setting up a linux box with ssh access
 
-a. Dockerfile
+### Dockerfile
 
 ```Docker
 FROM hellocosynus
@@ -186,26 +190,25 @@ CMD tail -f /dev/null
 ```
 
 
-- We build on the previous image `hellocosynus`: you can compose different images!
+- We build on the previous image `hellocosynus`: you can extend from an existing image.
 
-- There is a lot of garbage to create a user and setting up the ssh server
+- In the Dockerfilie there is a lot of "garbage" to create a user and setting up the ssh server (don't care too much about that).
 
-- `EXPOSE 22` tells Docker to expose the network port to the outside world (otherwise the container cannot be accessed)
+- `EXPOSE 22` tells Docker to expose the network port to the outside world (otherwise, the container cannot be accessed).
 
 - `COPY` copies a file (took from the current directory where we execute `docker build`) in the **image**.
 
 - `ENTRYPOINT` is the first command executed when running the container.
+  We execute the script [entrypoint.sh](./examples/ssh/entrypoint.sh) that starts the ssh service.
 
-We execute the script [entrypoint.sh](./examples/ssh/entrypoint.sh) that starts the ssh service.
+  Only the last ENTRYPOINT instruction in the Dockerfile will have an effect. Also read [CMD vs ENTRYPOINT](https://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile) to understand the difference.
 
-Only the last ENTRYPOINT instruction in the Dockerfile will have an effect.
-
-[CMD vs ENTRYPOINT](https://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile)
+- `CMD tail -f /dev/null` just runs an infinite loop that prevents the termination of the contrainer execution.
 
 More commands and documentation about writing a [Dockerfile](https://docs.docker.com/engine/reference/builder/)
 
 
-We build the image:
+We then build the image `ssh`:
 ```bash
 $ docker build -t ssh .
 ```
@@ -214,10 +217,9 @@ Run the container:
 ```bash
 $ docker run  -di -p 3200:22 --name sshcontainer ssh
 ```
-
-We run the container in background (detached, `-d` option).
-
-We map the port 22 of the container to the port 3200 of the host.
+Notice that this time:
+- We run the container in background (detached, `-d` option).
+- We map the port 22 of the container to the port 3200 of the host: that is, we will be able to connect to the container service on port 22 (`ssh`) by connecting to the host (our system) on port 3200.
 
 ```bash
 $ docker container ls
@@ -231,7 +233,7 @@ $ ssh -p 3200 cosynus@localhost
 ```
 
 
-b. Containers conserve their state:
+### Containers conserve their state:
 
 Connect to the server:
 
@@ -262,9 +264,9 @@ The file `cosynushasbeenhere` is there.
 Careful: changes to the image (e.g., installing software) should be done at in the `Dockerfile` and not on the container.
 
 
-c. How many containers as you want...
+### How many containers can you run?
 
-We can run another container on different port:
+We can run another container on a different port:
 ```bash
 $ docker run  -di -p 3201:22 --name sshcontainer2 ssh
 ```
